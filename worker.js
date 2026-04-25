@@ -39,8 +39,21 @@ export default {
           nodeList = text.split('\n').filter(line => line.trim().length > 1);
         }
         
+        // --- 核心修复：过滤掉反爬虫页面的 HTML/JS 代码 ---
+        // 真正的节点通常包含 "://" (如 vmess://, vless://)，且不会包含 HTML 标签或 JS 关键字
+        nodeList = nodeList.filter(line => {
+          const l = line.trim();
+          return l.includes('://') && !l.includes('<') && !l.includes('function') && !l.includes('{');
+        });
+        
         nodeCount = nodeList.length;
-        detail = nodeCount > 0 ? `成功获取 ${nodeCount} 个节点，即将逐条发送...` : "无节点内容";
+        if (nodeCount > 0) {
+          detail = `成功获取 ${nodeCount} 个节点，即将逐条发送...`;
+        } else {
+          // 如果解析后没有节点，说明获取到的是防爬虫验证页面（CF五盾）
+          status = "被反爬拦截";
+          detail = "获取失败：链接返回的是网页验证代码（可能触发了防机器人验证），无法解析出有效节点。";
+        }
       } else {
         status = `异常 (${response.status})`;
         detail = response.statusText;
