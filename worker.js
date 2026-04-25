@@ -16,6 +16,10 @@ export default {
     if (url.pathname === '/txt') {
       return await this.handleTxt(env);
     }
+    // 路由：查看 Clash 订阅格式 (YAML)
+    if (url.pathname === '/clash') {
+      return await this.handleClash(env);
+    }
 
     // 默认路由：手动触发监控发信
     await this.monitorAndNotify(env, url.origin);
@@ -87,7 +91,10 @@ export default {
 <div class="container">
   <div class="header">
     <h2>节点列表 (${nodes.length})</h2>
-    <a href="/txt" class="btn">查看 TXT 格式</a>
+    <div>
+      <a href="/txt" class="btn">TXT 格式</a>
+      <a href="/clash" class="btn" style="background:#ff9800; margin-left: 5px;">Clash 订阅</a>
+    </div>
   </div>
   <div id="nodes"></div>
 </div>
@@ -137,6 +144,25 @@ export default {
       return new Response(result.error, { headers: { 'content-type': 'text/plain;charset=UTF-8' } });
     }
     return new Response(result.nodes.join('\n'), { headers: { 'content-type': 'text/plain;charset=UTF-8' } });
+  },
+
+  // 渲染 Clash 订阅 (YAML)
+  async handleClash(env) {
+    const subUrl = "https://SOS.CMLiussss.net/auto"; // 也可以换成你的专属 clash 链接
+    try {
+      // 关键：通过伪装 User-Agent 为 Clash，让服务器自动下发 YAML 格式的 Clash 订阅
+      const response = await fetch(subUrl, {
+        headers: { "User-Agent": "ClashforWindows/0.20.39" }
+      });
+      if (!response.ok) {
+        return new Response(`获取 Clash 订阅异常 (${response.status})`, { status: response.status, headers: { 'content-type': 'text/plain;charset=UTF-8' } });
+      }
+      const text = await response.text();
+      // 这里不对内容做校验，直接返回 YAML
+      return new Response(text, { headers: { 'content-type': 'text/yaml;charset=UTF-8' } });
+    } catch (e) {
+      return new Response("请求 Clash 订阅异常：" + e.message, { headers: { 'content-type': 'text/plain;charset=UTF-8' } });
+    }
   },
 
   async monitorAndNotify(env, origin = null) {
