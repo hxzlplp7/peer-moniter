@@ -23,7 +23,8 @@ export default {
     try {
       const response = await fetch(subUrl, {
         headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+          // 伪装成常见的订阅客户端（如 v2rayN 或 Clash），有些节点池对浏览器 UA 限制很严或被频繁拉取导致 429
+          "User-Agent": "v2rayN/6.23"
         }
       });
 
