@@ -157,8 +157,14 @@ export default {
       if (!response.ok) {
         return new Response(`获取 Clash 订阅异常 (${response.status})`, { status: response.status, headers: { 'content-type': 'text/plain;charset=UTF-8' } });
       }
-      const text = await response.text();
-      // 这里不对内容做校验，直接返回 YAML
+      let text = await response.text();
+      
+      // --- 自动纠错逻辑 ---
+      // 上游节点池在转换 ss + v2ray-plugin 时可能生成了非法的空字段，导致 Clash 客户端报错 obfs mode error
+      text = text.replace(/mode:\s*""/g, 'mode: "websocket"');
+      text = text.replace(/path:\s*""/g, 'path: "/"');
+      text = text.replace(/host:\s*""/g, 'host: "cloudflare.com"');
+      
       return new Response(text, { headers: { 'content-type': 'text/yaml;charset=UTF-8' } });
     } catch (e) {
       return new Response("请求 Clash 订阅异常：" + e.message, { headers: { 'content-type': 'text/plain;charset=UTF-8' } });
